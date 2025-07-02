@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca Interactiva BIGC</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Font Awesome para iconos (opcional, si quieres usar iconos en lugar de emojis) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-container">
+        <div class="login-card">
+            <h2>Iniciar Sesión</h2>
+            <div id="login-error" class="alert alert-danger"></div>
+            <div class="form-group">
+                <label for="username">Usuario</label>
+                <input type="text" id="username" placeholder="Ingrese su usuario">
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" placeholder="Ingrese su contraseña">
+            </div>
+            <button id="login-btn" class="btn btn-block">Ingresar</button>
+        </div>
+    </div>
+    
+    <!-- Main App (hidden until login) -->
+    <div id="app-container" style="display: none;">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>BIGC</h2>
+                <p>Biblioteca Interactiva</p>
+            </div>
+            
+            <div class="sidebar-menu">
+                <div class="menu-title">Menú Principal</div>
+                <div class="menu-item active-menu" data-view="dashboard">
+                    <i class="fas fa-chart-line"></i> Inicio
+                </div>
+                
+                <div class="menu-item has-submenu" id="admin-menu">
+                    <i class="fas fa-cog"></i> Administración
+                    <div class="submenu">
+                        <div class="menu-item" data-view="user-management">
+                            <i class="fas fa-users"></i> Gestión Usuarios
+                        </div>
+                        <div class="menu-item" data-view="doc-management">
+                            <i class="fas fa-file-alt"></i> Gestión Documental
+                        </div>
+                        <div class="menu-item" data-view="areas">
+                            <i class="fas fa-folder"></i> Áreas
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h2 id="view-title">Dashboard</h2>
+                <div class="header-controls">
+                    <span id="welcome-user"></span>
+                    <button id="logout-btn" class="btn">Cerrar Sesión</button>
+                </div>
+            </div>
+            
+            <!-- Dynamic Content Area -->
+            <div id="content-area">
+                <!-- Dashboard View -->
+                <div id="dashboard-view">
+                    <div class="card">
+                        <h3>Bienvenido a la biblioteca interactiva BIGC!</h3>
+                        <p id="welcome-message"></p>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Estadísticas</h3>
+                        <div id="stats-container" style="display: flex; gap: 20px; margin-top: 15px; flex-wrap: wrap;">
+                            <div class="stat-card" style="background: #e3f2fd; padding: 15px; border-radius: 5px; flex: 1; min-width: 150px;">
+                                <h4>Usuarios</h4>
+                                <p id="users-count">Cargando...</p>
+                            </div>
+                            <div class="stat-card" style="background: #e8f5e9; padding: 15px; border-radius: 5px; flex: 1; min-width: 150px;">
+                                <h4>Documentos</h4>
+                                <p id="docs-count">Cargando...</p>
+                            </div>
+                            <div class="stat-card" style="background: #fff3e0; padding: 15px; border-radius: 5px; flex: 1; min-width: 150px;">
+                                <h4>Áreas</h4>
+                                <p id="areas-count">Cargando...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- User Management View -->
+                <div id="user-management-view" style="display: none;">
+                    <div id="user-message" class="alert"></div>
+                    <div class="table-actions">
+                        <button id="create-user-btn" class="btn">Crear Usuario</button>
+                        <input type="text" id="user-search" class="search-filter" placeholder="Buscar usuarios...">
+                    </div>
+                    
+                    <div class="card">
+                        <div id="users-loading" class="spinner"></div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nickname</th>
+                                    <th>Correo Electrónico</th>
+                                    <th>Nombres</th>
+                                    <th>Apellidos</th>
+                                    <th>Teléfono</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <!-- Users will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Create User View -->
+                <div id="create-user-view" style="display: none;">
+                    <div class="card">
+                        <h3 id="create-user-title">Crear Nuevo Usuario</h3>
+                        <div id="user-form-message" class="alert"></div>
+                        <div class="form-container">
+                            <!-- Nombres y Apellidos -->
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="new-firstname">Nombres *</label>
+                                        <input type="text" id="new-firstname" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="new-lastname">Apellidos *</label>
+                                        <input type="text" id="new-lastname" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Correo y Contraseña -->
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="new-email">Correo Electrónico *</label>
+                                        <input type="email" id="new-email" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="new-password">Contraseña *</label>
+                                        <input type="password" id="new-password" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Teléfono y Rol -->
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="new-phone">Teléfono</label>
+                                        <input type="text" id="new-phone" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="new-role">Rol *</label>
+                                        <select id="new-role" class="form-control">
+                                            <!-- Roles will be loaded dynamically -->
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Compañía y Nickname -->
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="new-company">Compañía *</label>
+                                        <select id="new-company" class="form-control">
+                                            <!-- Companies will be loaded dynamically -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="new-nickname">Nickname *</label>
+                                        <input type="text" id="new-nickname" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Estado (para edición) -->
+                            <div class="form-row">
+                                <div class="form-col" id="user-status-group" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="edit-enable">Habilitado</label>
+                                        <input type="checkbox" id="edit-enable" class="form-control" style="width: auto; margin-top: 10px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="edit-blocked">Bloqueado</label>
+                                        <input type="checkbox" id="edit-blocked" class="form-control" style="width: auto; margin-top: 10px;">
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <!-- Espacio vacío para alinear si solo el estado está presente -->
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button id="save-user-btn" class="btn">Guardar Usuario</button>
+                                <button id="cancel-user-btn" class="btn" style="background-color: #6c757d; margin-left: 10px;">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Document Management View -->
+                <div id="doc-management-view" style="display: none;">
+                    <div id="doc-message" class="alert"></div>
+                    <div class="table-actions">
+                        <button id="create-doc-btn" class="btn">Crear Documento</button>
+                        <input type="text" id="doc-search" class="search-filter" placeholder="Buscar documentos...">
+                    </div>
+                    
+                    <div class="card">
+                        <div id="docs-loading" class="spinner"></div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Título</th>
+                                    <th>Compañía</th>
+                                    <th>Área</th>
+                                    <th>Subido por</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Subida</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="docs-table-body">
+                                <!-- Documents will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Create Document View -->
+                <div id="create-doc-view" style="display: none;">
+                    <div class="card">
+                        <h3 id="create-doc-title">Subir Nuevo Documento</h3>
+                        <div id="doc-form-message" class="alert"></div>
+                        <div class="form-container">
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="doc-name">Nombre del Documento *</label>
+                                        <input type="text" id="doc-name" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="doc-company">Compañía *</label>
+                                        <select id="doc-company" class="form-control">
+                                            <!-- Companies will be loaded dynamically -->
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="doc-area">Área</label>
+                                        <select id="doc-area" class="form-control">
+                                            <option value="">-- Seleccione un Área (Opcional) --</option>
+                                            <!-- Areas will be loaded dynamically based on company -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="doc-status">Estado *</label>
+                                        <select id="doc-status" class="form-control">
+                                            <!-- Document Status will be loaded dynamically -->
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="doc-description">Descripción</label>
+                                <textarea id="doc-description" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="form-group" id="doc-file-group">
+                                <label for="doc-file">Archivo *</label>
+                                <input type="file" id="doc-file" class="form-control">
+                                <small class="file-info" style="display: block; margin-top: 5px; color: #666;"></small>
+                            </div>
+                            <div class="form-group" id="doc-current-file-group" style="display: none;">
+                                <label>Archivo Actual:</label>
+                                <a id="current-doc-filename" href="#" target="_blank" style="display: block; margin-top: 5px;"></a>
+                                <button id="replace-doc-file-btn" class="btn action-btn" style="background-color: #6c757d; margin-top: 10px;">Reemplazar Archivo</button>
+                            </div>
+
+                            <div class="form-group">
+                                <button id="save-doc-btn" class="btn">Guardar Documento</button>
+                                <button id="cancel-doc-btn" class="btn" style="background-color: #6c757d; margin-left: 10px;">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Areas View -->
+                <div id="areas-view" style="display: none;">
+                    <div id="area-message" class="alert"></div>
+                    <div class="table-actions">
+                        <button id="create-area-btn" class="btn">Crear Área</button>
+                        <input type="text" id="area-search" class="search-filter" placeholder="Buscar áreas...">
+                    </div>
+                    <div class="card">
+                        <div id="areas-loading" class="spinner"></div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Descripción</th>
+                                    <th>Compañía</th>
+                                    <th>Fecha Creación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="areas-table-body">
+                                <!-- Areas will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Create Area View -->
+                <div id="create-area-view" style="display: none;">
+                    <div class="card">
+                        <h3 id="create-area-title">Crear Nueva Área</h3>
+                        <div id="area-form-message" class="alert"></div>
+                        <div class="form-container">
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="area-name">Nombre *</label>
+                                        <input type="text" id="area-name" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="area-company">Compañía *</label>
+                                        <select id="area-company" class="form-control">
+                                            <!-- Companies will be loaded dynamically -->
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="area-description">Descripción</label>
+                                <textarea id="area-description" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <button id="save-area-btn" class="btn">Guardar Área</button>
+                                <button id="cancel-area-btn" class="btn" style="background-color: #6c757d; margin-left: 10px;">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Viewer Modal -->
+    <div id="document-viewer-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-doc-title">Visualizar Documento</h3>
+                <span class="close-button" id="close-doc-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <iframe id="doc-viewer-iframe" src="" frameborder="0"></iframe>
+            </div>
+            <div class="modal-footer">
+                <a id="download-doc-btn" class="btn" style="background-color: #28a745;" download>Descargar Documento</a>
+                <button id="close-doc-modal-btn" class="btn" style="background-color: #6c757d;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="custom-confirm-modal" class="confirm-modal">
+        <div class="confirm-modal-content">
+            <h3 id="confirm-modal-message"></h3>
+            <div class="button-group">
+                <button id="confirm-yes-btn" class="btn">Sí</button>
+                <button id="confirm-no-btn" class="btn" style="background-color: #6c757d;">No</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/mainmodal.js"></script>
+</body>
+</html>
